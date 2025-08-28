@@ -106,7 +106,6 @@ export const initializeSocket = (io) => {
     socket.on("disconnect", async () => {
       console.log("User disconnected:", socket.user.username);
 
-      // Remove from connected users
       connectedUsers.delete(socket.userId);
 
       await User.findByIdAndUpdate(socket.userId, {
@@ -121,7 +120,6 @@ export const initializeSocket = (io) => {
       });
     });
 
-    // Handle errors
     socket.on("error", (error) => {
       console.error("Socket error:", error);
     });

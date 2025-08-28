@@ -35,14 +35,14 @@ const profilePicStorage = new CloudinaryStorage({
 export const uploadImage = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
 export const uploadProfilePic = multer({
   storage: profilePicStorage,
   limits: {
-    fileSize: 2 * 1024 * 1024, // 2MB limit for profile pics
+    fileSize: 2 * 1024 * 1024,
   },
 });
 

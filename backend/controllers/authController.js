@@ -10,7 +10,6 @@ export const register = async (req, res) => {
   try {
     const { username, email, password, bio } = req.body;
 
-    // Check if user exists
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
     });
@@ -44,13 +43,13 @@ export const register = async (req, res) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(201).json({

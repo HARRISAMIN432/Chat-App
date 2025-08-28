@@ -201,7 +201,6 @@ export const markConversationAsSeen = async (req, res) => {
     const { conversationId } = req.params;
     const currentUserId = req.user.id;
 
-    // Verify user is part of conversation
     const conversation = await Conversation.findOne({
       _id: conversationId,
       participants: currentUserId,
@@ -211,7 +210,6 @@ export const markConversationAsSeen = async (req, res) => {
       return res.status(404).json({ message: "Conversation not found" });
     }
 
-    // Mark all unseen messages in conversation as seen
     await Message.updateMany(
       {
         conversationId,

@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import assets from "../assets/assets";
+import { signup, signin } from "../utils/api";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { login } from "../redux/userSlice";
 
 const Login = () => {
   const [currentState, setCurrentState] = useState("Sign up");
@@ -8,11 +12,43 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [bio, setBio] = useState("");
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const onSubmitHandler = (e) => {
+  const onSubmitHandler = async (e) => {
     e.preventDefault();
-    if (currentState === "Sign up" && !isDataSubmitted) {
-      setIsDataSubmitted(true);
+    setError(null);
+    try {
+      if (currentState === "Sign up") {
+        if (!isDataSubmitted) {
+          setIsDataSubmitted(true);
+          return;
+        }
+        const response = await signup({ fullName, email, password, bio });
+        localStorage.setItem("token", response.token);
+        navigate("/");
+        dispatch(
+          login({
+            id: response.user._id,
+            email: response.user.email,
+            name: response.fullName,
+          })
+        );
+      } else {
+        const response = await signin({ email, password });
+        localStorage.setItem("token", response.token);
+        navigate("/");
+        dispatch(
+          login({
+            id: response.user._id,
+            email: response.user.email,
+            name: response.fullName,
+          })
+        );
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "An error occurred");
     }
   };
 
@@ -30,20 +66,20 @@ const Login = () => {
       >
         <h2 className="font-medium text-xl sm:text-2xl flex justify-between items-center">
           {currentState}
-          {isDataSubmitted && (
+          {currentState === "Sign up" && isDataSubmitted && (
             <img
               src={assets.arrow_icon}
               alt="toggle"
               className="cursor-pointer w-5"
               onClick={() => {
-                setCurrentState(
-                  currentState === "Sign up" ? "Sign in" : "Sign up"
-                );
+                setCurrentState("Sign up");
                 setIsDataSubmitted(false);
               }}
             />
           )}
         </h2>
+
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
         {currentState === "Sign up" && !isDataSubmitted && (
           <input
@@ -88,11 +124,15 @@ const Login = () => {
         )}
 
         <button className="py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer hover:opacity-90 transition">
-          {currentState === "Sign up" ? "Sign up" : "Sign in"}
+          {currentState === "Sign up"
+            ? isDataSubmitted
+              ? "Complete Sign up"
+              : "Next"
+            : "Sign in"}
         </button>
 
         <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400">
-          <input type="checkbox" />
+          <input type="checkbox" required />
           <p>Agree to the terms of use & privacy policy</p>
         </div>
         <div className="flex flex-col gap-2">
@@ -101,7 +141,7 @@ const Login = () => {
               Already have an account?{" "}
               <span
                 onClick={() => {
-                  setCurrentState("Login");
+                  setCurrentState("Sign in");
                   setIsDataSubmitted(false);
                 }}
                 className="font-medium text-violet-500 cursor-pointer"
@@ -113,7 +153,11 @@ const Login = () => {
             <p className="text-sm text-gray-600">
               Create an account{" "}
               <span
-                onClick={() => setCurrentState("Sign up")}
+                on
+                fornisClick={() => {
+                  setCurrentState("Sign up");
+                  setIsDataSubmitted(false);
+                }}
                 className="font-medium text-violet-500 cursor-pointer"
               >
                 Click here

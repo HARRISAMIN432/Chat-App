@@ -1,59 +1,37 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const messageSchema = new mongoose.Schema(
   {
-    conversationId: {
+    chatId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Conversation",
+      ref: "Chat",
       required: true,
     },
-    sender: {
+    senderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    receiverId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
     text: {
       type: String,
-      trim: true,
+      default: "",
     },
     image: {
       type: String,
+      default: null,
     },
-    messageType: {
-      type: String,
-      enum: ["text", "image", "system"],
-      default: "text",
-    },
-    deliveredTo: [
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-        deliveredAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    seenBy: [
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-        seenAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    edited: {
+    isRead: {
       type: Boolean,
       default: false,
     },
-    editedAt: {
+    readAt: {
       type: Date,
+      default: null,
     },
   },
   {
@@ -61,7 +39,7 @@ const messageSchema = new mongoose.Schema(
   }
 );
 
-messageSchema.index({ conversationId: 1, createdAt: -1 });
-messageSchema.index({ sender: 1 });
+messageSchema.index({ chatId: 1, createdAt: 1 });
+messageSchema.index({ senderId: 1, receiverId: 1 });
 
-export default mongoose.model("Message", messageSchema);
+module.exports = mongoose.model("Message", messageSchema);

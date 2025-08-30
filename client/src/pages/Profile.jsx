@@ -1,19 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import assets from "../assets/assets";
+import { getUserProfile, updateProfile } from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const [selectedImage, setSelectedImage] = useState(null);
-  const [name, setName] = useState("Harris Amin");
-  const [bio, setBio] = useState("Hi Everyone!");
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await getUserProfile();
+        setName(response.user.fullName);
+        setBio(response.user.bio || "");
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to load profile");
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you’ll integrate with backend (MERN API)
-    // Example: send { name, bio, selectedImage } to server
-    console.log({ name, bio, selectedImage });
-    navigate("/"); // redirect to home after saving
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("fullName", name);
+      formData.append("bio", bio);
+      if (selectedImage) {
+        formData.append("profilePic", selectedImage);
+      }
+      await updateProfile(formData);
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update profile");
+    }
   };
 
   return (
@@ -24,6 +48,7 @@ const Profile = () => {
           className="flex flex-col gap-5 p-8 sm:p-10 flex-1 w-full"
         >
           <h3 className="text-lg font-semibold">Profile Details</h3>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <label
             htmlFor="avatar"
             className="flex items-center gap-3 cursor-pointer"
@@ -69,7 +94,6 @@ const Profile = () => {
             >
               Save Changes
             </button>
-
             <button
               type="button"
               onClick={() => navigate("/")}

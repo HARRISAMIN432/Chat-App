@@ -1,117 +1,110 @@
-import bcrypt from "bcryptjs";
-import User from "../models/User.js";
+const User = require("../models/User");
 
-export const getUserProfile = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
-    const { id } = req.params;
-    const user = await User.findById(id).select("-password -refreshToken");
+    const users = await User.find({ _id: { $ne: req.user._id } })
+      .select("-password")
+      .sort({ isOnline: -1, lastSeen: -1 });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json({ user });
+    res.json({
+      success: true,
+      users,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching user profile", error: error.message });
+    console.error("Get users error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
-export const updateProfile = async (req, res) => {
+const getUserProfile = async (req, res) => {
   try {
-    const { username, bio, profilePic } = req.body;
-    const userId = req.user.id;
-
-    if (username) {
-      const existingUser = await User.findOne({
-        username,
-        _id: { $ne: userId },
-      });
-
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already taken" });
-      }
-    }
-
-    const updateData = {};
-    if (username) updateData.username = username;
-    if (bio !== undefined) updateData.bio = bio;
-    if (profilePic) updateData.profilePic = profilePic;
-
-    const user = await User.findByIdAndUpdate(userId, updateData, {
-      new: true,
-      runValidators: true,
-    }).select("-password -refreshToken");
+    const user = await User.findById(req.user._id).select("-password");
 
     res.json({
-      message: "Profile updated successfully",
+      success: true,
       user,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating profile", error: error.message });
+    console.error("Get profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
-export const updatePassword = async (req, res) => {
+const updateProfile = async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
-    const userId = req.user.id;
+    const { fullName, bio } = req.body;
+    const profilePic = req.file ? `/uploads/${req.file.filename}` : undefined;
 
-    const user = await User.findById(userId).select("+password");
+    const updateData = {};
+    if (fullName) updateData.fullName = fullName;
+    if (bio !== undefined) updateData.bio = bio;
+    if (profilePic) updateData.profilePic = profilePic;
 
-    const isValidPassword = await bcrypt.compare(
-      currentPassword,
-      user.password
-    );
-    if (!isValidPassword) {
-      return res.status(400).json({ message: "Current password is incorrect" });
-    }
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, updateData, {
+      new: true,
+    }).select("-password");
 
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-    user.password = hashedPassword;
-    await user.save();
-
-    res.json({ message: "Password updated successfully" });
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating password", error: error.message });
+    console.error("Update profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
-export const searchUsers = async (req, res) => {
+const searchUsers = async (req, res) => {
   try {
     const { query } = req.query;
-    const currentUserId = req.user.id;
 
-    if (!query || query.trim().length < 2) {
-      return res
-        .status(400)
-        .json({ message: "Search query must be at least 2 characters long" });
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
     }
 
     const users = await User.find({
       $and: [
-        { _id: { $ne: currentUserId } },
+        { _id: { $ne: req.user._id } },
         {
           $or: [
-            { username: { $regex: query, $options: "i" } },
+            { fullName: { $regex: query, $options: "i" } },
             { email: { $regex: query, $options: "i" } },
           ],
         },
       ],
     })
-      .select("-password -refreshToken")
+      .select("-password")
       .limit(10);
 
-    res.json({ users });
+    res.json({
+      success: true,
+      users,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error searching users", error: error.message });
+    console.error("Search users error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
+};
+
+module.exports = {
+  getAllUsers,
+  getUserProfile,
+  updateProfile,
+  searchUsers,
 };

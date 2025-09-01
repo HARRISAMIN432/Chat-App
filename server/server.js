@@ -1,15 +1,14 @@
-import express from "express";
 import dotenv from "dotenv";
+dotenv.config({ quiet: true });
+
+import express from "express";
 import cors from "cors";
 import http from "http";
 import helmet from "helmet";
 import { connectDB } from "./config/database.js";
-import { error } from "./middlewares/error.js";
 import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
-
-dotenv.config({ quiet: true });
 
 const app = express();
 const server = http.createServer(app);

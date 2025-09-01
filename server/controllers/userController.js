@@ -20,6 +20,7 @@ export const signup = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
+      bio,
     });
     await newUser.save();
     const { password: hashed, ...userData } = newUser._doc;

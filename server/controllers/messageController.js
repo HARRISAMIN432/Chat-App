@@ -65,26 +65,32 @@ export const sendMessage = async (req, res) => {
     const receiverId = req.params.id;
     const senderId = req.user._id;
     let imageUrl;
+
     if (image) {
-      const uploadResponse = await cloudinary.uploader.upload(image);
+      const uploadResponse = await cloudinary.uploader.upload(image, {
+        folder: "chat_images",
+      });
       imageUrl = uploadResponse.secure_url;
     }
+
     const newMessage = new Message({
       senderId,
       receiverId,
       text,
       image: imageUrl,
     });
+
     const receiverSocketId = userSocketMap.get(receiverId);
-    if (receiverSocketId) {
+    if (receiverSocketId)
       io.to(receiverSocketId).emit("newMessage", newMessage);
-    }
+
     await newMessage.save();
     res
       .status(201)
       .json({ success: true, message: "Message sent", newMessage });
   } catch (e) {
-    console.error("Mark messages as seen error:", e);
+    console.log(cloudinary.config());
+    console.error("Send message error:", e);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

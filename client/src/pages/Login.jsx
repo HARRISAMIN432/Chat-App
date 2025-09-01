@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import assets from "../assets/assets";
+import { useContext } from "react";
+import { AuthContext } from "../context/authContext";
 
 const Login = () => {
   const [currentState, setCurrentState] = useState("Sign up");
@@ -9,11 +11,21 @@ const Login = () => {
   const [bio, setBio] = useState("");
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
 
+  const { login } = useContext(AuthContext);
+
   const onSubmitHandler = (e) => {
     e.preventDefault();
+    console.log({ currentState, fullName, email, password, bio });
     if (currentState === "Sign up" && !isDataSubmitted) {
       setIsDataSubmitted(true);
+      return;
     }
+    login(currentState === "Sign up" ? "signup" : "login", {
+      fullName,
+      email,
+      password,
+      bio,
+    });
   };
 
   return (
@@ -37,7 +49,7 @@ const Login = () => {
               className="cursor-pointer w-5"
               onClick={() => {
                 setCurrentState(
-                  currentState === "Sign up" ? "Sign in" : "Sign up"
+                  currentState === "Sign up" ? "Login" : "Sign up"
                 );
                 setIsDataSubmitted(false);
               }}
@@ -88,7 +100,7 @@ const Login = () => {
         )}
 
         <button className="py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer hover:opacity-90 transition">
-          {currentState === "Sign up" ? "Sign up" : "Sign in"}
+          {currentState === "Sign up" ? "Sign up" : "Login"}
         </button>
 
         <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400">

@@ -1,19 +1,32 @@
 import React, { useState } from "react";
 import assets from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/authContext";
 
 const Profile = () => {
+  const { authUser, updateProfile } = useContext(AuthContext);
+
   const [selectedImage, setSelectedImage] = useState(null);
-  const [name, setName] = useState("Harris Amin");
-  const [bio, setBio] = useState("Hi Everyone!");
+  const [name, setName] = useState(authUser?.fullName || "");
+  const [bio, setBio] = useState(authUser.bio || "");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you’ll integrate with backend (MERN API)
-    // Example: send { name, bio, selectedImage } to server
-    console.log({ name, bio, selectedImage });
-    navigate("/"); // redirect to home after saving
+    if (!selectedImage) {
+      await updateProfile({ fullName: name, bio });
+      navigate("/");
+      return;
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(selectedImage);
+    reader.onload = async () => {
+      const base64Image = reader.result;
+      await updateProfile({ fullName: name, bio, profileImage: base64Image });
+      navigate("/");
+      return;
+    };
   };
 
   return (
@@ -42,7 +55,7 @@ const Profile = () => {
                   : assets.avatar_icon
               }
               alt="profile"
-              className="w-12 h-12 rounded-full object-cover"
+              className={`w-12 h-12 ${selectedImage && "rounded-full"}`}
             />
             <span className="text-sm">Upload Profile Image</span>
           </label>

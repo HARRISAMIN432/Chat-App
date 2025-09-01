@@ -1,9 +1,12 @@
 import React from "react";
 import assets, { userDummyData } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/authContext";
 
 const Sidebar = ({ selectedUser, setSelectedUser }) => {
   const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
 
   return (
     <div
@@ -28,7 +31,9 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
                 Edit Profile
               </p>
               <hr className="my-2 border-t border-gray-500" />
-              <p className="cursor-pointer text-sm">Logout</p>
+              <p onClick={() => logout()} className="cursor-pointer text-sm">
+                Logout
+              </p>
             </div>
           </div>
         </div>
